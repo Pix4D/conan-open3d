@@ -17,8 +17,8 @@ class Open3dConan(ConanFile):
     exports = ['patches/*']
 
     requires = (
-        "eigen/[>=3.3.4]@conan/stable",
-        "glfw/[>=3.2.1]@bincrafters/stable",
+        "eigen/[>=3.3.4]@conan/master-imgui",
+        "glfw/[>=3.2.1]@bincrafters/master-imgui",
         )
 
     options = {
@@ -42,8 +42,10 @@ class Open3dConan(ConanFile):
     exports_sources = "CMakeLists.txt",
 
     def requirements(self):
+        if self.settings.os == 'Macos':
+            self.requires('OpenMP/[70.0.0-3, include_prerelease=True]@pix4d/stable')
         if self.options.with_visualization:
-            self.requires("glew/[>=2.1.0]@bincrafters/stable")
+            self.requires("glew/[>=2.1.0]@bincrafters/master-imgui")
     
     def configure(self):
         if self.options.with_visualization and self.options.shared:
