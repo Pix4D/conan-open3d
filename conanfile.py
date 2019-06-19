@@ -77,6 +77,15 @@ class Open3dConan(ConanFile):
         cmake.build()
         cmake.install()
 
+    def imports(self):
+        if self.settings.os == 'Windows':
+            # Copy the resources to the dlls (for packaging)
+            # and bin folders (for running in the build folder)
+            destination_folders = 'dlls', 'bin'
+            for dst in destination_folders:
+                # Some libraries misplace the dlls in the lib folder
+                self.copy('*.dll', dst=dst, src='lib', root_package='glew')
+
     def package(self):
         base_dir = os.path.join(self.package_folder, "include", "open3d_conan")
         if os.path.exists(base_dir):
@@ -89,6 +98,3 @@ class Open3dConan(ConanFile):
         libs = tools.collect_libs(self)
         self.cpp_info.libs = libs
         self.env_info.PATH.append(os.path.join(self.package_folder, "bin"))
-
-
-
