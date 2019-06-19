@@ -19,6 +19,7 @@ class Open3dConan(ConanFile):
     requires = (
         "eigen/[>=3.3.4]@conan/master-imgui",
         "glfw/[>=3.2.1]@bincrafters/master-imgui",
+        # "pybind11/[>=2.2.3-0, include_prerelease=True]@pix4d/stable"
         )
 
     options = {
@@ -59,7 +60,8 @@ class Open3dConan(ConanFile):
         cmake.definitions["BUILD_EIGEN3"] = False
         cmake.definitions["BUILD_PYBIND11"] = False
         cmake.definitions["EIGEN3_FOUND"] = True
-        cmake.definitions["BUILD_PYTHON_MODULE"] = True
+        # Build python module when pybind is available (Python installed on builder)
+        cmake.definitions["BUILD_PYTHON_MODULE"] = False
 
         cmake.definitions["BUILD_GLFW"] = False
         cmake.definitions["GLFW_FOUND"] = True
@@ -78,13 +80,11 @@ class Open3dConan(ConanFile):
         cmake.install()
 
     def imports(self):
+        destination_folder = 'bin'
         if self.settings.os == 'Windows':
-            # Copy the resources to the dlls (for packaging)
-            # and bin folders (for running in the build folder)
-            destination_folders = 'dlls', 'bin'
-            for dst in destination_folders:
-                # Some libraries misplace the dlls in the lib folder
-                self.copy('*.dll', dst=dst, src='lib', root_package='glew')
+            # Some libraries misplace the dlls in the lib folder
+            self.copy('*.dll', dst=destination_folder, src='lib')
+            self.copy('*.lib', dst=destination_folder, src='lib')
 
     def package(self):
         base_dir = os.path.join(self.package_folder, "include", "open3d_conan")
