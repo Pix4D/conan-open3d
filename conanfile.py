@@ -45,7 +45,7 @@ class Open3dConan(ConanFile):
         if self.settings.os == 'Macos':
             self.requires('OpenMP/[70.0.0-3, include_prerelease=True]@pix4d/stable')
         if self.options.with_visualization:
-            self.requires("glew/[>=2.1.0]@bincrafters/stable")
+            self.requires("glew/[>=2.1.0]@pix4d/stable")
     
     def configure(self):
         if self.options.with_visualization and self.options.shared:
