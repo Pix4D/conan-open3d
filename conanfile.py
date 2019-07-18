@@ -5,7 +5,9 @@ import shutil
 
 
 class Open3dConan(ConanFile):
-    version = "0.7.0"
+    lib_version = '0.7.0'
+    revision = '1'
+    version = '{}-{}'.format(lib_version, revision)
 
     name = "open3d"
     license = "https://github.com/IntelVCL/Open3D/raw/master/LICENSE"
@@ -14,7 +16,7 @@ class Open3dConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     generators = "pkg_config", "cmake"
     short_paths = True
-    exports = ['patches/*']
+    exports = ['patches/*', 'FindOpen3D.cmake']
 
     requires = (
         "eigen/[>=3.3.4]@conan/stable",
@@ -23,19 +25,17 @@ class Open3dConan(ConanFile):
 
     options = {
         "shared": [True, False],
-        "with_visualization": [True, False],
         }
 
     default_options = (
         "shared=True",
-        "with_visualization=False",
         )
 
     scm = {
         "type": "git",
         "subfolder": "open3d",
         "url": "https://github.com/IntelVCL/Open3D.git",
-        "revision": "v%s" % version,
+        "revision": "v%s" % lib_version,
         "submodule": "recursive",
      }
 
@@ -44,11 +44,10 @@ class Open3dConan(ConanFile):
     def requirements(self):
         if self.settings.os == 'Macos':
             self.requires('OpenMP/[70.0.0-3, include_prerelease=True]@pix4d/stable')
-        if self.options.with_visualization:
-            self.requires("glew/[>=2.1.0]@pix4d/stable")
+        self.requires("glew/[>=2.1.0]@pix4d/stable")
     
     def configure(self):
-        if self.options.with_visualization and self.options.shared:
+        if self.settings.os != 'Windows' and self.options.shared:
             self.options['glew'].shared = True
 
     def build(self):
@@ -67,9 +66,8 @@ class Open3dConan(ConanFile):
         # with_visualization currently only causes open3d to use it's bundled 3rd-party libs
         # the src/CMakeLists.txt file would need to be patched to disable the complete module.
 
-        if self.options.with_visualization:
-            cmake.definitions["BUILD_GLEW"] = False
-            cmake.definitions["GLEW_FOUND"] = True
+        cmake.definitions["BUILD_GLEW"] = False
+        cmake.definitions["GLEW_FOUND"] = True
 
         cmake.definitions["BUILD_LIBREALSENSE"] = False
 
@@ -83,12 +81,9 @@ class Open3dConan(ConanFile):
             for name in os.listdir(base_dir):
                 shutil.move(os.path.join(base_dir, name), os.path.join(self.package_folder, "include"))
 
-        self.copy(pattern="*", src="bin", dst="./bin")
+        self.copy('FindOpen3D.cmake', '.', '.')
 
     def package_info(self):
         libs = tools.collect_libs(self)
         self.cpp_info.libs = libs
         self.env_info.PATH.append(os.path.join(self.package_folder, "bin"))
-
-
-
